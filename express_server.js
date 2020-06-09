@@ -3,10 +3,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const morgan = require('morgan')
+const cookieParser = require('cookie-parser')
 
 app.use(morgan('dev'));
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser())
 app.set("view engine", "ejs")
 
 function generateRandomString() {
@@ -20,16 +22,10 @@ const urlDatabase = {
   "a2xVn2": "http://www.lighthouselabs.ca"
 };
 
+// Home page
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-
-app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase }
-  res.render("urls_index", templateVars);
-})
-
-
 
 // See the object database in the browser
 app.get("/urls.json", (req, res) => {
@@ -41,24 +37,42 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-// Render the new URL page
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new")
+// Render the all URLs page
+app.get("/urls", (req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  }
+  console.log(req.cookies)
+  res.render("urls_index", templateVars);
 })
 
-// Render the show URLs page
+// Render the new URL page
+app.get("/urls/new", (req, res) => {
+  let templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("urls_new", templateVars)
+})
+
+// Render the show one URL page
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const longURL = urlDatabase[req.params.shortURL];
+  // Redirect to "urls" if shortURL does not exist
+  if (!longURL) {
+    return res.redirect("/urls")
+  }
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"]
+   };
   res.render("urls_show", templateVars);
 });
 
 // Link to long URL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-  console.log(res.statusCode)
-  // if (res.statusCode !== 200) {
-  //   console.log('Error')
-  // }
   res.redirect(longURL);
 });
 
@@ -78,6 +92,18 @@ app.post("/urls/:shortURL", (req, res) => {
 // Delete URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL]
+  res.redirect("/urls")
+})
+
+// Save the username
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username)
+  res.redirect("/urls")
+})
+
+// Clear username cookie
+app.post("/logout", (req, res) => {
+  res.clearCookie('username')
   res.redirect("/urls")
 })
 
