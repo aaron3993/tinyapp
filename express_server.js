@@ -54,11 +54,11 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  console.log(req.params);
-  console.log(urlDatabase);
-
   const longURL = urlDatabase[req.params.shortURL];
-  console.log(longURL);
+  console.log(res.statusCode)
+  // if (res.statusCode !== 200) {
+  //   console.log('Error')
+  // }
   res.redirect(longURL);
 });
 
