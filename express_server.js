@@ -58,6 +58,7 @@ app.get("/urls/new", (req, res) => {
 // Render the show one URL page
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
+  // const longURL = urlDatabase[req.params.shortURL].startswith('http');
   // Redirect to "urls" if shortURL does not exist
   if (!longURL) {
     return res.redirect("/urls")
@@ -65,10 +66,16 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
+    // longURL: `http://${urlDatabase[req.params.shortURL]}`,
     username: req.cookies["username"]
    };
   res.render("urls_show", templateVars);
 });
+
+// Render the registration page
+app.get("/registration", (req, res) => {
+  res.render("registration")
+})
 
 // Link to long URL
 app.get("/u/:shortURL", (req, res) => {
