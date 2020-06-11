@@ -4,6 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 3000; // default port 8080
 const morgan = require('morgan')
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
 
 app.use(morgan('dev'));
 
@@ -43,18 +44,18 @@ const checkForExistingEmail = (email) => {
   }
 }
 
-const checkForMatchingPassword = (email, password) => {
-  for (let userKey in users) {
-    if (users[userKey].email === email) {
-      return users[userKey].password === password
-    }
-  }
-}
-
 const findUserIdByEmail = email => {
   for (let userKey in users) {
     if (users[userKey].email === email) {
       return users[userKey].id
+    }
+  }
+}
+
+const findPasswordByEmail = email => {
+  for (let userKey in users) {
+    if (users[userKey].email === email) {
+      return users[userKey].password
     }
   }
 }
@@ -187,15 +188,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body
   const user = checkForExistingEmail(email)
-  const userPassword = checkForMatchingPassword(email, password)
-
   if (!user) {
     return res.status(403).send("Error 403, email does not exist!")
   }
-  if (!userPassword) {
-    return res.status(403).send("Error 403, incorrect password!")
+  const userPassword = findPasswordByEmail(email)
+  let validPassword = bcrypt.compareSync(password, userPassword);
+  if (!validPassword) {
+    return res.status(403).send("Error 403, email does not exist!")
   }
-
+  console.log(userPassword)
   res.cookie('user_id', findUserIdByEmail(email))
   return res.redirect("/urls")
 })
@@ -206,12 +207,13 @@ app.post("/logout", (req, res) => {
   return res.redirect("/urls")
 })
 
-// POST - Add new user object
+// POST - Register new user object
 app.post("/register", (req, res) => {
   const id = generateRandomString()
   const { email, password } = req.body
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const user = checkForExistingEmail(email)
-  if (!email || !password) {
+  if (!email || !hashedPassword) {
     return res.status(403).send("Error 403, email or password is empty")
   }
   if (user) {
@@ -220,8 +222,9 @@ app.post("/register", (req, res) => {
   users[id] = {
     id,
     email,
-    password
+    password: hashedPassword
   }
+  console.log(users)
   res.cookie("user_id", id)
   return res.redirect("/urls")
 })
