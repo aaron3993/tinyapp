@@ -20,30 +20,32 @@ app.use(morgan('dev'));
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  // i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
+  // "userRandomID": {
+  //   id: "userRandomID",
+  //   email: "user@example.com",
+  //   password: "purple-monkey-dinosaur"
+  // },
+  // "user2RandomID": {
+  //   id: "user2RandomID",
+  //   email: "user2@example.com",
+  //   password: "dishwasher-funk"
+  // }
 };
 
-// GET - Render the all URLs page
+// GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
     console.log("Error 401, You must log in to access the URL!");
     return res.redirect("/login")
     // return res.status(401).send("Error 401, You must log in to access the URL!");
+    // I wanted to print this message but if I were to log out, it would give me the error right away, giving it an awkward feel
   }
+
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
   let templateVars = {
     urls: urlsById,
@@ -52,21 +54,24 @@ app.get("/urls", (req, res) => {
   return res.render("urls_index", templateVars);
 });
 
-// GET - Render the new URL page
+// GET - Render a new URL page
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
   };
+
   if (!req.session.user_id) {
     return res.redirect("/login");
   }
+
   return res.render("urls_new", templateVars);
 });
 
-// GET - Render the show one URL page
+// GET - Render the edit a URL page
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
+
   if (!req.session.user_id) {
     return res.status(401).send("Error 401, You must log in to access the URL!");
   }
@@ -76,6 +81,7 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!longURL) {
     return res.redirect("/urls");
   }
+
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
@@ -116,7 +122,7 @@ app.post("/urls", (req, res) => {
   return res.redirect(`/urls/${randomString}`);
 });
 
-// POST - Edit existing URL
+// PUT - Edit existing URL
 app.put("/urls/:shortURL", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
   if (req.session.user_id && urlsById[req.params.shortURL]) {
@@ -127,7 +133,7 @@ app.put("/urls/:shortURL", (req, res) => {
   }
 });
 
-// POST - Delete URL
+// DELETE - Delete URL
 app.delete("/urls/:shortURL/delete", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
   if (req.session.user_id && urlsById[req.params.shortURL]) {
@@ -136,28 +142,6 @@ app.delete("/urls/:shortURL/delete", (req, res) => {
   } else {
     return res.status(401).send("Error 401, You must log in to make changes!");
   }
-});
-
-// POST - Save the username
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const user = getUserByEmail(email, users);
-  if (!user) {
-    return res.status(401).send("Error 401, email does not exist!");
-  }
-  const userPassword = users[getUserByEmail(email, users)].password;
-  let validPassword = bcrypt.compareSync(password, userPassword);
-  if (!validPassword) {
-    return res.status(401).send("Error 401, email does not exist!");
-  }
-  req.session.user_id = users[getUserByEmail(email, users)].id;
-  return res.redirect("/urls");
-});
-
-// POST - Logout by clearing user_id cookie
-app.post("/logout", (req, res) => {
-  req.session.user_id = null;
-  return res.redirect("/urls");
 });
 
 // POST - Register new user object
@@ -181,6 +165,29 @@ app.post("/register", (req, res) => {
   return res.redirect("/urls");
 });
 
+// POST - Login to existing user object
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const user = getUserByEmail(email, users);
+  if (!user) {
+    return res.status(401).send("Error 401, email does not exist!");
+  }
+  const userPassword = users[getUserByEmail(email, users)].password;
+  let validPassword = bcrypt.compareSync(password, userPassword);
+  if (!validPassword) {
+    return res.status(401).send("Error 401, email does not exist!");
+  }
+  req.session.user_id = users[getUserByEmail(email, users)].id;
+  return res.redirect("/urls");
+});
+
+// POST - Logout by clearing user_id cookie
+app.post("/logout", (req, res) => {
+  req.session.user_id = null;
+  return res.redirect("/urls");
+});
+
+// Listen to port number
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
