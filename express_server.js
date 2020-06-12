@@ -1,11 +1,11 @@
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
+const cookieSession = require('cookie-session');
 const express = require("express");
 const morgan = require('morgan');
 const PORT = process.env.PORT || 8080;
-const app = express();
-const cookieSession = require('cookie-session');
 
+const app = express();
 app.set("view engine", "ejs");
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
