@@ -2,17 +2,20 @@ const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const express = require("express");
+const methodOverride = require('method-override')
 const morgan = require('morgan');
+
 const PORT = process.env.PORT || 8080;
 
 const app = express();
 app.set("view engine", "ejs");
-app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['f080ac7b-b838-4c5f-a1f4-b0a9fee10130', 'c3fb18be-448b-4f6e-a377-49373e9b7e1a']
 }));
+app.use(methodOverride('_method'))
+app.use(morgan('dev'));
 
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
@@ -114,7 +117,7 @@ app.post("/urls", (req, res) => {
 });
 
 // POST - Edit existing URL
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
   if (req.session.user_id && urlsById[req.params.shortURL]) {
     urlDatabase[req.params.shortURL].longURL = req.body.longurl_input;
@@ -125,7 +128,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 // POST - Delete URL
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
   if (req.session.user_id && urlsById[req.params.shortURL]) {
     delete urlDatabase[req.params.shortURL];
