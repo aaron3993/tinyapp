@@ -39,6 +39,7 @@ const users = {
 app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
     console.log("Error 401, You must log in to access the URL!");
+    return res.redirect("/login")
     // return res.status(401).send("Error 401, You must log in to access the URL!");
   }
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
@@ -64,9 +65,11 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
-  if (!req.session.user_id || !urlsById[req.params.shortURL]) {
-    console.log("Error 401, You must log in to access the URL!");
-    // return res.status(401).send("Error 401, You must log in to access the URL!");
+  if (!req.session.user_id) {
+    return res.status(401).send("Error 401, You must log in to access the URL!");
+  }
+  if (!urlsById[req.params.shortURL]) {
+    return res.status(401).send("Error 401, You can only visit your own URLs!"); 
   }
   if (!longURL) {
     return res.redirect("/urls");
@@ -98,7 +101,7 @@ app.get("/login", (req, res) => {
 // GET - Link to long URL from short URL
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
-    return res.status(401).send("Error 404, URL does not exist!")
+    return res.status(404).send("Error 404, URL does not exist!")
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   return res.redirect(longURL);
