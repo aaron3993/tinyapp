@@ -1,21 +1,20 @@
+const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const express = require("express");
-const app = express();
-const PORT = process.env.PORT || 8080; // default port 8080
 const morgan = require('morgan');
-const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
+const PORT = process.env.PORT || 8080;
+const app = express();
 const cookieSession = require('cookie-session');
-const bcrypt = require('bcrypt');
-
-app.use(morgan('dev'));
 
 app.set("view engine", "ejs");
-
+app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['f080ac7b-b838-4c5f-a1f4-b0a9fee10130', 'c3fb18be-448b-4f6e-a377-49373e9b7e1a']
 }));
+
+const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
