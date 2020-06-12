@@ -14,7 +14,7 @@
       <a href="registration">Register</a>
     </div>
     <% if(user) { %>
-      <p class="m-0">Logged in as: <%= user.email %></p>
+      <p class="m-0 mr-4">Logged in as: <%= user.email %></p>
       <form method="POST" action="/logout">
         <button class="btn btn-success" type="submit">Logout</button>
       </form>

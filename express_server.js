@@ -68,16 +68,12 @@ app.get("/urls/:shortURL", (req, res) => {
     console.log("Error 401, You must log in to access the URL!");
     // return res.status(401).send("Error 401, You must log in to access the URL!");
   }
-  // const longURL = urlDatabase[req.params.shortURL].startswith('http');
-  // Redirect to "urls" if shortURL does not exist
   if (!longURL) {
     return res.redirect("/urls");
   }
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    // longURL: `http://${urlDatabase[req.params.shortURL]}`,
-    // username: req.cookies["username"]
     user: users[req.session.user_id]
   };
   return res.render("urls_show", templateVars);
@@ -101,6 +97,9 @@ app.get("/login", (req, res) => {
 
 // GET - Link to long URL from short URL
 app.get("/u/:shortURL", (req, res) => {
+  if (!urlDatabase[req.params.shortURL]) {
+    return res.status(401).send("Error 404, URL does not exist!")
+  }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   return res.redirect(longURL);
 });
