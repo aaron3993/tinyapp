@@ -41,7 +41,6 @@ const users = {
 const visitors = {
   count: 0,
   uniqueVisitors: [],
-  timestamp: []
 }
 
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
@@ -90,15 +89,13 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!longURL) {
     return res.redirect("/urls");
   }
-console.log('timestamp: ', req.cookies['timestamp'])
+
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
     count: req.cookies["visited"],
     visitors: req.cookies["visitors"],
-    timestamp: req.cookies["timestamp"]
-    // userId: req.cookies["userId"]
   };
   return res.render("urls_show", templateVars);
 });
@@ -130,30 +127,10 @@ app.get("/u/:shortURL", (req, res) => {
   if (!visitors.uniqueVisitors.includes(req.session.user_id)) {
     visitors.uniqueVisitors.push(req.session.user_id)
   }
-  visitors.timestamp.push({'date': new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' })), 'id': req.session.user_id})
-  // const timestampArr = []
-  // for (const obj of visitors.timestamp) {
-  //   timestampArr.push(obj.date, obj.id)
-  // }
-  const timestampArr = []
-  for (const obj of visitors.timestamp) {
-    timestampArr.push(obj.date, obj.id)
-  }
-  // console.log(timestampArr)
-  // <% for (let i = 0; i < timestamp.length; i++) { %>
-  //   <% if (i % 2) { %>
-  //     <p>User: <%= timestamp[i] %></p>
-  //   <% } else { %>
-  //     <p>Visited times: <%= timestamp[i] %></p>
-  //   <% } %>
-  // <% } %>
   
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.cookie("visitors", visitors.uniqueVisitors.length)
   res.cookie("visited", visitors.count);
-  res.cookie("timestamp", timestampArr)
-  // res.cookie('userId', timestamp.id);
-  // res.cookie('date', JSON.stringify(timestamp).date);
   res.redirect(longURL);
   return
 });
