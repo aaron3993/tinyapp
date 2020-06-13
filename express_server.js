@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser')
 const cookieSession = require('cookie-session');
 const express = require("express");
 const methodOverride = require('method-override')
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser())
 app.use(cookieSession({
   name: 'session',
   keys: ['f080ac7b-b838-4c5f-a1f4-b0a9fee10130', 'c3fb18be-448b-4f6e-a377-49373e9b7e1a']
@@ -36,6 +38,15 @@ const users = {
   //   password: "dishwasher-funk"
   // }
 };
+let count = 0;
+const uniqueVisitors = []
+const timestamp = []
+
+const visitors = {
+  count: 0,
+  uniqueVisitors: [],
+  timestamp: {}
+}
 
 // GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
@@ -81,11 +92,15 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!longURL) {
     return res.redirect("/urls");
   }
-
+  console.log('req.cookies: ', req.cookies["visited"])
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    count: req.cookies["visited"],
+    visitors: req.cookies["visitors"],
+    timestamp: req.cookies["timestamp"]
+    // userId: req.cookies["userId"]
   };
   return res.render("urls_show", templateVars);
 });
@@ -108,11 +123,34 @@ app.get("/login", (req, res) => {
 
 // GET - Link to long URL from short URL
 app.get("/u/:shortURL", (req, res) => {
+  // let count = 0;
+  // const uniqueVisitors = []
+  // const timeStamp = []
   if (!urlDatabase[req.params.shortURL]) {
     return res.status(404).send("Error 404, URL does not exist!")
   }
+
+  // Cookies
+  if (!uniqueVisitors.includes(req.session.user_id)) {
+    uniqueVisitors.push(req.session.user_id)
+  }
+  timestamp.push({'date': new Date(Date.now()), 'id': req.session.user_id})
+  const timestampArr = []
+  for (const obj of timestamp) {
+    timestampArr.push(obj.date, obj.id)
+  }
+  count++
+  console.log('timestamp: ', timestamp)
+  
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  return res.redirect(longURL);
+  console.log('count: ', count)
+  res.cookie("visitors", uniqueVisitors.length)
+  res.cookie("visited", count);
+  res.cookie("timestamp", timestampArr)
+  // res.cookie('userId', timestamp.id);
+  // res.cookie('date', JSON.stringify(timestamp).date);
+  res.redirect(longURL);
+  return
 });
 
 // POST - Post a new URL
@@ -125,6 +163,7 @@ app.post("/urls", (req, res) => {
 // PUT - Edit existing URL
 app.put("/urls/:shortURL", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
+
   if (req.session.user_id && urlsById[req.params.shortURL]) {
     urlDatabase[req.params.shortURL].longURL = req.body.longurl_input;
     return res.redirect(`/urls/${req.params.shortURL}`);
@@ -136,6 +175,7 @@ app.put("/urls/:shortURL", (req, res) => {
 // DELETE - Delete URL
 app.delete("/urls/:shortURL/delete", (req, res) => {
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
+
   if (req.session.user_id && urlsById[req.params.shortURL]) {
     delete urlDatabase[req.params.shortURL];
     return res.redirect("/urls");
@@ -150,12 +190,14 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const user = getUserByEmail(email, users);
+
   if (!email || !hashedPassword) {
     return res.status(401).send("Error 401, email or password is empty");
   }
   if (user) {
     return res.status(401).send("Error 401, email already exists!");
   }
+
   users[id] = {
     id,
     email,
@@ -174,9 +216,11 @@ app.post("/login", (req, res) => {
   }
   const userPassword = users[getUserByEmail(email, users)].password;
   let validPassword = bcrypt.compareSync(password, userPassword);
+
   if (!validPassword) {
     return res.status(401).send("Error 401, email does not exist!");
   }
+
   req.session.user_id = users[getUserByEmail(email, users)].id;
   return res.redirect("/urls");
 });
