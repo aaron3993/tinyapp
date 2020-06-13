@@ -19,34 +19,32 @@ app.use(cookieSession({
 app.use(methodOverride('_method'))
 app.use(morgan('dev'));
 
-const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
-
 const urlDatabase = {
   // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   // i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
-  // "userRandomID": {
+// "userRandomID": {
   //   id: "userRandomID",
   //   email: "user@example.com",
   //   password: "purple-monkey-dinosaur"
   // },
   // "user2RandomID": {
-  //   id: "user2RandomID",
-  //   email: "user2@example.com",
-  //   password: "dishwasher-funk"
-  // }
-};
-let count = 0;
-const uniqueVisitors = []
-const timestamp = []
-
+    //   id: "user2RandomID",
+    //   email: "user2@example.com",
+    //   password: "dishwasher-funk"
+    // }
+  };
+    
+// Visitor cookies object
 const visitors = {
   count: 0,
   uniqueVisitors: [],
-  timestamp: {}
+  timestamp: []
 }
+
+const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
 // GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
@@ -92,7 +90,7 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!longURL) {
     return res.redirect("/urls");
   }
-  console.log('req.cookies: ', req.cookies["visited"])
+console.log('timestamp: ', req.cookies['timestamp'])
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
@@ -123,29 +121,36 @@ app.get("/login", (req, res) => {
 
 // GET - Link to long URL from short URL
 app.get("/u/:shortURL", (req, res) => {
-  // let count = 0;
-  // const uniqueVisitors = []
-  // const timeStamp = []
   if (!urlDatabase[req.params.shortURL]) {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
   // Cookies
-  if (!uniqueVisitors.includes(req.session.user_id)) {
-    uniqueVisitors.push(req.session.user_id)
+  visitors.count++
+  if (!visitors.uniqueVisitors.includes(req.session.user_id)) {
+    visitors.uniqueVisitors.push(req.session.user_id)
   }
-  timestamp.push({'date': new Date(Date.now()), 'id': req.session.user_id})
+  visitors.timestamp.push({'date': new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' })), 'id': req.session.user_id})
+  // const timestampArr = []
+  // for (const obj of visitors.timestamp) {
+  //   timestampArr.push(obj.date, obj.id)
+  // }
   const timestampArr = []
-  for (const obj of timestamp) {
+  for (const obj of visitors.timestamp) {
     timestampArr.push(obj.date, obj.id)
   }
-  count++
-  console.log('timestamp: ', timestamp)
+  // console.log(timestampArr)
+  // <% for (let i = 0; i < timestamp.length; i++) { %>
+  //   <% if (i % 2) { %>
+  //     <p>User: <%= timestamp[i] %></p>
+  //   <% } else { %>
+  //     <p>Visited times: <%= timestamp[i] %></p>
+  //   <% } %>
+  // <% } %>
   
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  console.log('count: ', count)
-  res.cookie("visitors", uniqueVisitors.length)
-  res.cookie("visited", count);
+  res.cookie("visitors", visitors.uniqueVisitors.length)
+  res.cookie("visited", visitors.count);
   res.cookie("timestamp", timestampArr)
   // res.cookie('userId', timestamp.id);
   // res.cookie('date', JSON.stringify(timestamp).date);
