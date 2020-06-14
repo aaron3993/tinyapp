@@ -38,11 +38,11 @@ const users = {
   };
     
 // Visitor cookies object
-const visitors = {
-  count: 0,
-  uniqueVisitors: [],
-  timestamp: []
-}
+// const visitors = {
+//   count: 0,
+//   uniqueVisitors: [],
+//   timestamp: []
+// }
 
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
@@ -88,7 +88,10 @@ app.get("/urls/new", (req, res) => {
 
 // GET - Render the edit a URL page (show)
 app.get("/urls/:shortURL", (req, res) => {
-  // urlDatabase[req.params.shortURL]
+  // urlDatabase[req.params.shortURL].count = 0;
+  // urlDatabase[req.params.shortURL].uniqueVisitors = []
+  // urlDatabase[req.params.shortURL].timestamp = []
+  console.log(urlDatabase)
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
 
@@ -101,15 +104,15 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!longURL) {
     return res.redirect("/urls");
   }
-console.log('timestamp: ', req.cookies['timestamp'])
+
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
     count: req.cookies["visited"],
     visitors: req.cookies["visitors"],
-    timestamp: req.cookies["timestamp"]
-    // userId: req.cookies["userId"]
+    // visitor: req.cookies["visitor"],
+    // date: req.cookies["date"],
   };
   return res.render("urls_show", templateVars);
 });
@@ -137,29 +140,44 @@ app.get("/u/:shortURL", (req, res) => {
   }
 
   urlDatabase.timestamp = []
-  const id = generateRandomString()
+  // const id = generateRandomString()
   // Check if visitor is logged in and has existing cookie, if not, create one for them
-  if (!req.session.user_id) {
-    req.session.user_id = id;
-  }
+  // if (!req.session.user_id) {
+  //   req.session.user_id = id;
+  // }
   if (!urlDatabase[req.params.shortURL]) {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
   // Cookies
-  visitors.count++
-  if (!visitors.uniqueVisitors.includes(req.session.user_id)) {
-    visitors.uniqueVisitors.push(req.session.user_id)
+  // visitors.count++
+
+  // Increment count
+  urlDatabase[req.params.shortURL].count++
+    // Check if visitor is logged in and has existing cookie, if not, create one for them
+
+  if (!req.session.user_id) {
+    const id = generateRandomString();
+    req.session.user_id = id
   }
-  visitors.timestamp.push({'date': new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' })), 'id': req.session.user_id})
+  // If visitor is not already in the unique visitors list, push them on
+  if (!urlDatabase[req.params.shortURL].uniqueVisitors.includes(req.session.user_id)) {
+    urlDatabase[req.params.shortURL].uniqueVisitors.push(req.session.user_id)
+  }
+  console.log(urlDatabase)
+
+  urlDatabase[req.params.shortURL].visitor = req.session.user_id
+  urlDatabase[req.params.shortURL].date = new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' }))
+  urlDatabase[req.params.shortURL].timestamp.push(urlDatabase[req.params.shortURL].visitor, urlDatabase[req.params.shortURL].date)
+  // urlDatabase[req.params.shortURL].timestamp.push({'date': new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' })), 'id': req.session.user_id})
   // const timestampArr = []
   // for (const obj of visitors.timestamp) {
   //   timestampArr.push(obj.date, obj.id)
   // }
-  const timestampArr = []
-  for (const obj of visitors.timestamp) {
-    timestampArr.push(obj.date, obj.id)
-  }
+  // const timestampArr = []
+  // for (const obj of visitors.timestamp) {
+  //   timestampArr.push(obj.date, obj.id)
+  // }
   // console.log(timestampArr)
   // <% for (let i = 0; i < timestamp.length; i++) { %>
   //   <% if (i % 2) { %>
@@ -171,9 +189,15 @@ app.get("/u/:shortURL", (req, res) => {
   
   
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.cookie("visitors", visitors.uniqueVisitors.length)
-  res.cookie("visited", visitors.count);
-  res.cookie("timestamp", timestampArr)
+  // res.cookie("visitors", visitors.uniqueVisitors.length)
+  // res.cookie("visited", visitors.count);
+  // res.cookie("timestamp", timestampArr)
+  res.cookie("visited", urlDatabase[req.params.shortURL].count);
+  res.cookie("visitors", urlDatabase[req.params.shortURL].uniqueVisitors.length)
+  // res.cookie("visitor", urlDatabase[req.params.shortURL].visitor)
+  // res.cookie("date", urlDatabase[req.params.shortURL].date)
+  res.cookie("timestamp", urlDatabase[req.params.shortURL].timestamp)
+  // res.cookie("timestamp", timestampArr)
   // res.cookie('userId', timestamp.id);
   // res.cookie('date', JSON.stringify(timestamp).date);
   res.redirect(longURL);
@@ -184,6 +208,11 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const randomString = generateRandomString();
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: req.session.user_id};
+  urlDatabase[randomString].count = 0;
+  urlDatabase[randomString].uniqueVisitors = []
+  urlDatabase[randomString].visitor = null
+  urlDatabase[randomString].date = null
+  urlDatabase[randomString].timestamp = []
   return res.redirect(`/urls/${randomString}`);
 });
 
