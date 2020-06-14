@@ -47,6 +47,16 @@ const visitors = {
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
 
 // GET - Render the list of URLs page
+app.get("/", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    urls: urlDatabase,
+    user: users[req.session.user_id]
+  };
+  return res.render("home", templateVars);
+})
+
+// GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
     console.log("Error 401, You must log in to access the URL!");
@@ -76,8 +86,9 @@ app.get("/urls/new", (req, res) => {
   return res.render("urls_new", templateVars);
 });
 
-// GET - Render the edit a URL page
+// GET - Render the edit a URL page (show)
 app.get("/urls/:shortURL", (req, res) => {
+  // urlDatabase[req.params.shortURL]
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
 
@@ -125,6 +136,16 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
+  urlDatabase.timestamp = []
+  const id = generateRandomString()
+  // Check if visitor is logged in and has existing cookie, if not, create one for them
+  if (!req.session.user_id) {
+    req.session.user_id = id;
+  }
+  if (!urlDatabase[req.params.shortURL]) {
+    return res.status(404).send("Error 404, URL does not exist!")
+  }
+
   // Cookies
   visitors.count++
   if (!visitors.uniqueVisitors.includes(req.session.user_id)) {
@@ -147,6 +168,7 @@ app.get("/u/:shortURL", (req, res) => {
   //     <p>Visited times: <%= timestamp[i] %></p>
   //   <% } %>
   // <% } %>
+  
   
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.cookie("visitors", visitors.uniqueVisitors.length)
