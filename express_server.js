@@ -148,11 +148,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 // POST - Post a new URL
 app.post("/urls", (req, res) => {
-  const randomString = generateRandomString();
-  urlDatabase[randomString] = {longURL: req.body.longURL, userID: req.session.user_id};
-  urlDatabase[randomString].count = 0;
-  urlDatabase[randomString].uniqueVisitors = []
-  return res.redirect(`/urls/${randomString}`);
+  const randomId = generateRandomString();
+  urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id};
+  urlDatabase[randomId].count = 0;
+  urlDatabase[randomId].uniqueVisitors = []
+  return res.redirect(`/urls/${randomId}`);
 });
 
 // PUT - Edit existing URL
