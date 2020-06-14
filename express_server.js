@@ -36,14 +36,18 @@ const users = {
     //   password: "dishwasher-funk"
     // }
   };
-    
-// Visitor cookies object
-const visitors = {
-  count: 0,
-  uniqueVisitors: [],
-}
 
 const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
+
+// GET - Render the list of URLs page
+app.get("/", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    urls: urlDatabase,
+    user: users[req.session.user_id]
+  };
+  return res.render("home", templateVars);
+})
 
 // GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
@@ -75,8 +79,9 @@ app.get("/urls/new", (req, res) => {
   return res.render("urls_new", templateVars);
 });
 
-// GET - Render the edit a URL page
+// GET - Render the edit a URL page (show)
 app.get("/urls/:shortURL", (req, res) => {
+  console.log(urlDatabase)
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
 
@@ -122,15 +127,21 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
-  // Cookies
-  visitors.count++
-  if (!visitors.uniqueVisitors.includes(req.session.user_id)) {
-    visitors.uniqueVisitors.push(req.session.user_id)
+  // Increment count
+  urlDatabase[req.params.shortURL].count++
+  // Check if visitor is logged in and has existing cookie, if not, create one for them
+  if (!req.session.user_id) {
+    const id = generateRandomString();
+    req.session.user_id = id
+  }
+  // If visitor is not already in the unique visitors list, push them on
+  if (!urlDatabase[req.params.shortURL].uniqueVisitors.includes(req.session.user_id)) {
+    urlDatabase[req.params.shortURL].uniqueVisitors.push(req.session.user_id)
   }
   
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.cookie("visitors", visitors.uniqueVisitors.length)
-  res.cookie("visited", visitors.count);
+  res.cookie("visited", urlDatabase[req.params.shortURL].count);
+  res.cookie("visitors", urlDatabase[req.params.shortURL].uniqueVisitors.length)
   res.redirect(longURL);
   return
 });
@@ -139,6 +150,8 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const randomString = generateRandomString();
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: req.session.user_id};
+  urlDatabase[randomString].count = 0;
+  urlDatabase[randomString].uniqueVisitors = []
   return res.redirect(`/urls/${randomString}`);
 });
 
