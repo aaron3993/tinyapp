@@ -20,7 +20,7 @@ app.use(methodOverride('_method'))
 app.use(morgan('dev'));
 
 const urlDatabase = {
-  // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", count: 0, uniqueVisitors: [], timestamp: [] },
   // i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
@@ -36,15 +36,8 @@ const users = {
     //   password: "dishwasher-funk"
     // }
   };
-    
-// Visitor cookies object
-// const visitors = {
-//   count: 0,
-//   uniqueVisitors: [],
-//   timestamp: []
-// }
 
-const { generateRandomString, urlsForUser, getUserByEmail } = require('./helpers.js');
+const { generateRandomId, urlsForUser, getUserByEmail } = require('./helpers.js');
 
 // GET - Render the list of URLs page
 app.get("/", (req, res) => {
@@ -88,10 +81,6 @@ app.get("/urls/new", (req, res) => {
 
 // GET - Render the edit a URL page (show)
 app.get("/urls/:shortURL", (req, res) => {
-  // urlDatabase[req.params.shortURL].count = 0;
-  // urlDatabase[req.params.shortURL].uniqueVisitors = []
-  // urlDatabase[req.params.shortURL].timestamp = []
-  console.log(urlDatabase)
   const longURL = urlDatabase[req.params.shortURL];
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
 
@@ -109,10 +98,8 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
-    count: req.cookies["visited"],
-    visitors: req.cookies["visitors"],
-    // visitor: req.cookies["visitor"],
-    // date: req.cookies["date"],
+    visitors: req.cookies["uniqueVisitors"],
+    url: urlDatabase[req.params.shortURL]
   };
   return res.render("urls_show", templateVars);
 });
@@ -139,81 +126,34 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
-  urlDatabase.timestamp = []
-  // const id = generateRandomString()
-  // Check if visitor is logged in and has existing cookie, if not, create one for them
-  // if (!req.session.user_id) {
-  //   req.session.user_id = id;
-  // }
-  if (!urlDatabase[req.params.shortURL]) {
-    return res.status(404).send("Error 404, URL does not exist!")
-  }
-
-  // Cookies
-  // visitors.count++
-
   // Increment count
   urlDatabase[req.params.shortURL].count++
-    // Check if visitor is logged in and has existing cookie, if not, create one for them
-
+  // Check if visitor is logged in and has existing cookie, if not, create one for them
   if (!req.session.user_id) {
-    const id = generateRandomString();
+    const id = generateRandomId();
     req.session.user_id = id
   }
   // If visitor is not already in the unique visitors list, push them on
   if (!urlDatabase[req.params.shortURL].uniqueVisitors.includes(req.session.user_id)) {
     urlDatabase[req.params.shortURL].uniqueVisitors.push(req.session.user_id)
   }
-  console.log(urlDatabase)
+  // Push a new date and userId upon visit
+  urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, new Date().toLocaleString())
 
-  urlDatabase[req.params.shortURL].visitor = req.session.user_id
-  urlDatabase[req.params.shortURL].date = new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' }))
-  urlDatabase[req.params.shortURL].timestamp.push(urlDatabase[req.params.shortURL].visitor, urlDatabase[req.params.shortURL].date)
-  // urlDatabase[req.params.shortURL].timestamp.push({'date': new Date(Date.now().toLocaleString('en-GB', { timeZone: 'UTC' })), 'id': req.session.user_id})
-  // const timestampArr = []
-  // for (const obj of visitors.timestamp) {
-  //   timestampArr.push(obj.date, obj.id)
-  // }
-  // const timestampArr = []
-  // for (const obj of visitors.timestamp) {
-  //   timestampArr.push(obj.date, obj.id)
-  // }
-  // console.log(timestampArr)
-  // <% for (let i = 0; i < timestamp.length; i++) { %>
-  //   <% if (i % 2) { %>
-  //     <p>User: <%= timestamp[i] %></p>
-  //   <% } else { %>
-  //     <p>Visited times: <%= timestamp[i] %></p>
-  //   <% } %>
-  // <% } %>
-  
-  
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  // res.cookie("visitors", visitors.uniqueVisitors.length)
-  // res.cookie("visited", visitors.count);
-  // res.cookie("timestamp", timestampArr)
-  res.cookie("visited", urlDatabase[req.params.shortURL].count);
-  res.cookie("visitors", urlDatabase[req.params.shortURL].uniqueVisitors.length)
-  // res.cookie("visitor", urlDatabase[req.params.shortURL].visitor)
-  // res.cookie("date", urlDatabase[req.params.shortURL].date)
-  res.cookie("timestamp", urlDatabase[req.params.shortURL].timestamp)
-  // res.cookie("timestamp", timestampArr)
-  // res.cookie('userId', timestamp.id);
-  // res.cookie('date', JSON.stringify(timestamp).date);
+  res.cookie("uniquevisitors", urlDatabase[req.params.shortURL].uniqueVisitors)
   res.redirect(longURL);
   return
 });
 
 // POST - Post a new URL
 app.post("/urls", (req, res) => {
-  const randomString = generateRandomString();
-  urlDatabase[randomString] = {longURL: req.body.longURL, userID: req.session.user_id};
-  urlDatabase[randomString].count = 0;
-  urlDatabase[randomString].uniqueVisitors = []
-  urlDatabase[randomString].visitor = null
-  urlDatabase[randomString].date = null
-  urlDatabase[randomString].timestamp = []
-  return res.redirect(`/urls/${randomString}`);
+  const randomId = generateRandomId();
+  urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id};
+  urlDatabase[randomId].count = 0;
+  urlDatabase[randomId].uniqueVisitors = []
+  urlDatabase[randomId].timestamp = []
+  return res.redirect(`/urls/${randomId}`);
 });
 
 // PUT - Edit existing URL
@@ -242,7 +182,7 @@ app.delete("/urls/:shortURL/delete", (req, res) => {
 
 // POST - Register new user object
 app.post("/register", (req, res) => {
-  const id = generateRandomString();
+  const id = generateRandomId();
   const { email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const user = getUserByEmail(email, users);

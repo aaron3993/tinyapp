@@ -17,8 +17,16 @@
         <form method="POST" action="/urls/<%= shortURL %>?_method=PUT">
           New URL: <input type="text" name="longurl_input"/>
           <button class="btn btn-primary" type="submit">Submit</button>
-          <p>Visited: <%= count %> times</p>
-          <p>Unique visitors: <%= visitors %></p>
+          <p>Visited: <%= url.count %> times</p>
+          <p>Unique visitors: <%= url.uniqueVisitors.length %></p>
+          <h5>This link has been visited by:</h5>
+          <% for (let i = 0; i < url.timestamp.length; i++) { %>
+            <% if (i % 2) { %>
+              <p>Times Visited: <%= url.timestamp[i] %></p>
+            <% } else { %>
+              <p>User: <%= url.timestamp[i] %></p>
+            <% } %>
+          <% } %>
         </form>
       </div>
     <div class="card-footer text-muted"></div>
