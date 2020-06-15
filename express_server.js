@@ -51,10 +51,9 @@ app.get("/", (req, res) => {
 // GET - Render the list of URLs page
 app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
-    console.log("Error 401, You must log in to access the URL!");
     return res.redirect("/login")
     // return res.status(401).send("Error 401, You must log in to access the URL!");
-    // I wanted to print this message but if I were to log out, it would give me the error right away, giving it an awkward feel
+    // I wanted to print this above message but if I were to log out, it would give me the error right away, giving it an awkward feel
   }
 
   const urlsById = urlsForUser(req.session.user_id, urlDatabase);
@@ -125,7 +124,7 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send("Error 404, URL does not exist!")
   }
 
-  // Increment count
+  // Increment visitor count
   urlDatabase[req.params.shortURL].count++
   // Check if visitor is logged in and has existing cookie, if not, create one for them
   if (!req.session.user_id) {
