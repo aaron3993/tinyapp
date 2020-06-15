@@ -19,6 +19,7 @@
           <th scope="col">Long URL</th>
           <th scope="col">Visited</th>
           <th scope="col">Unique Visitors</th>
+          <th scope="col">Date created</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
@@ -30,6 +31,7 @@
               <td><%= urls[url].longURL %></td>
               <td><%= urls[url].count %> </td>
               <td><%= urls[url].uniqueVisitors.length %> </td>
+              <td><%= urls[url].dateCreated %> </td>
               <td><a href="/urls/<%= url %>"><button class="btn btn-outline-primary">Edit</button></a></td>
               <td><form method="POST" action="/urls/<%= url %>/delete?_method=DELETE"><button class="btn btn-outline-danger">Delete</button></form></td>
           </tr>

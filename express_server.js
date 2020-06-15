@@ -149,13 +149,14 @@ app.get("/u/:shortURL", (req, res) => {
 // POST - Post a new URL
 app.post("/urls", (req, res) => {
   const randomId = generateRandomId();
-
+  const currentTime = new Date().toDateString()
   // Create the object for every new URL
   urlDatabase[randomId] = {
     longURL: req.body.longURL,
     userID: req.session.user_id,
     count: 0,
     uniqueVisitors: [],
+    dateCreated: currentTime,
     timestamp: []
   };
 
