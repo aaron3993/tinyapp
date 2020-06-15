@@ -21,7 +21,6 @@ app.use(morgan('dev'));
 
 const urlDatabase = {
   // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", count: 0, uniqueVisitors: [], timestamp: [] },
-  // i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -39,7 +38,7 @@ const users = {
 
 const { generateRandomId, urlsForUser, getUserByEmail } = require('./helpers.js');
 
-// GET - Render the list of URLs page
+// GET - Render the home page, which lists all URLs by all users
 app.get("/", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
@@ -223,7 +222,7 @@ app.post("/login", (req, res) => {
 
 // POST - Logout by clearing user_id cookie
 app.post("/logout", (req, res) => {
-  req.session.user_id = null;
+  delete req.session.user_id
   return res.redirect("/urls");
 });
 
