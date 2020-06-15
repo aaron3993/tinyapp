@@ -67,13 +67,13 @@ app.get("/urls", (req, res) => {
 
 // GET - Render a new URL page
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
-    user: users[req.session.user_id]
-  };
-
   if (!req.session.user_id) {
     return res.redirect("/login");
   }
+
+  let templateVars = {
+    user: users[req.session.user_id]
+  };
 
   return res.render("urls_new", templateVars);
 });

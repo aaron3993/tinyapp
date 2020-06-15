@@ -17,6 +17,9 @@
         <form method="POST" action="/urls/<%= shortURL %>?_method=PUT">
           New URL: <input type="text" name="longurl_input"/>
           <button class="btn btn-primary" type="submit">Submit</button>
+          <div>
+            <a href="/urls/new">Add another URL</a>
+          </div>
           <p>Visited: <%= url.count %> times</p>
           <p>Unique visitors: <%= url.uniqueVisitors.length %></p>
           <h5>This link has been visited by:</h5>
