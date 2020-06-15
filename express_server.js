@@ -61,7 +61,6 @@ app.get("/urls", (req, res) => {
     urls: urlsById,
     user: users[req.session.user_id],
     visitors: req.cookies["uniqueVisitors"],
-    url: urlDatabase[req.params.shortURL]
   };
   return res.render("urls_index", templateVars);
 });
