@@ -137,7 +137,10 @@ app.get("/u/:shortURL", (req, res) => {
     urlDatabase[req.params.shortURL].uniqueVisitors.push(req.session.user_id)
   }
   // Push a new date and userId upon visit
-  urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, new Date().toLocaleString())
+  const currentTime = new Date().toLocaleString("en-US", {timeZone: "Canada/Eastern"});
+  urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, currentTime)
+  // urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, new Date().toLocaleString())
+ 
 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.cookie("uniquevisitors", urlDatabase[req.params.shortURL].uniqueVisitors)

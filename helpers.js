@@ -3,6 +3,7 @@ const generateRandomId = () => {
     .toString(16)
 };
 
+// I originally returned an object with this function because it seemed more practical but Compass instructed us to return a string instead
 const getUserByEmail = function(email, database) {
   for (let userKey in database) {
     if (database[userKey].email === email) {
