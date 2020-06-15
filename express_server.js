@@ -1,3 +1,5 @@
+const PORT = process.env.PORT || 8080;
+
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
@@ -5,8 +7,6 @@ const cookieSession = require('cookie-session');
 const express = require("express");
 const methodOverride = require('method-override')
 const morgan = require('morgan');
-
-const PORT = process.env.PORT || 8080;
 
 const app = express();
 app.set("view engine", "ejs");
@@ -139,8 +139,6 @@ app.get("/u/:shortURL", (req, res) => {
   // Push a new date and userId upon visit
   const currentTime = new Date().toLocaleString("en-US", {timeZone: "Canada/Eastern"});
   urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, currentTime)
-  // urlDatabase[req.params.shortURL].timestamp.push(req.session.user_id, new Date().toLocaleString())
- 
 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.cookie("uniquevisitors", urlDatabase[req.params.shortURL].uniqueVisitors)
