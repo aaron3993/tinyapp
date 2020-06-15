@@ -148,10 +148,16 @@ app.get("/u/:shortURL", (req, res) => {
 // POST - Post a new URL
 app.post("/urls", (req, res) => {
   const randomId = generateRandomId();
-  urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id};
-  urlDatabase[randomId].count = 0;
-  urlDatabase[randomId].uniqueVisitors = []
-  urlDatabase[randomId].timestamp = []
+
+  // Create the object for every new URL
+  urlDatabase[randomId] = {
+    longURL: req.body.longURL,
+    userID: req.session.user_id,
+    count: 0,
+    uniqueVisitors: [],
+    timestamp: []
+  };
+
   return res.redirect(`/urls/${randomId}`);
 });
 
