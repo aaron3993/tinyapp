@@ -1,6 +1,6 @@
 # TinyApp Project
 
-This project is a multi-page application that allows users to register/login with authentication, add URLs such as https://www.facebook.com/ and shorten them. Users can only see and edit or delete their own URLs.
+This project is a multi-page application that allows users to register/login with authentication, add URLs such as https://www.facebook.com/ and shorten them so they can easily be shared. Users can only see and edit or delete their own URLs.
 
 ## Final Product
 
