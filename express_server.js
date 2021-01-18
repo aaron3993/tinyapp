@@ -19,22 +19,9 @@ app.use(cookieSession({
 app.use(methodOverride('_method'))
 app.use(morgan('dev'));
 
-const urlDatabase = {
-  // b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", count: 0, uniqueVisitors: [], timestamp: [] },
-};
+const urlDatabase = {};
 
-const users = {
-// "userRandomID": {
-  //   id: "userRandomID",
-  //   email: "user@example.com",
-  //   password: "purple-monkey-dinosaur"
-  // },
-  // "user2RandomID": {
-    //   id: "user2RandomID",
-    //   email: "user2@example.com",
-    //   password: "dishwasher-funk"
-    // }
-  };
+const users = {};
 
 const { generateRandomId, urlsForUser, getUserByEmail } = require('./helpers.js');
 
@@ -235,6 +222,6 @@ app.post("/logout", (req, res) => {
 });
 
 // Listen to port number
-app.listen(PORT, () => {
+app.listen(process.env.PORT || PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
